@@ -1,5 +1,13 @@
 # Chladni — a struck and bowed modal body for two Alchemy Labs
 
+![Two Alchemy Labs either side of the Waveshare 5-inch screen, which shows both Labs' Chladni columns](docs/chladni-in-the-rack.jpg)
+
+*Chladni in the rack: Lab 2 on the left, Lab 1 on the right, and between
+them the Waveshare 5" screen in a printed faceplate. Lab 2 is a plate and
+Lab 1 a string; the string is in full swing inside the band of its whole
+motion, its mode bars are lit, and both Labs' contact points trace their
+phase-portrait loops.*
+
 Firmware for two [Hermetic Modular Alchemy Lab](https://hermeticmodular.com/modules/alchemy-lab)
 Eurorack modules and a Waveshare ESP32-S3 5" touch screen. Each Lab is one
 physical instrument: a **mallet** and a **bow** acting at one point on a body
