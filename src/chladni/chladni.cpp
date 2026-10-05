@@ -248,7 +248,7 @@ static Pager       pager(kNumPages, kNumPots);
 static Presets     presets(hw.seed.qspi);
 
 /* To debug the panel link, pass panel_i2c::Diag() instead of "i2c". */
-static hostlink::Host host(presets, "chladni", "Chladni", "0.1.1", "i2c");
+static hostlink::Host host(presets, "chladni", "Chladni", "0.1.2", "i2c");
 
 static cd::Instrument inst;
 
@@ -562,7 +562,14 @@ static void OnFrame()
     const uint32_t dms = now - slips_ms_;
     if (dms >= 16u)
     {
-        const float periods = (float)dms * 0.001f * t.pitch_hz;
+        /* Against the mode that is ringing, not the fundamental: a bowed bar
+         * or plate often locks onto an upper mode, and one slip per period
+         * of THAT mode is a clean tone. */
+        uint8_t dom = 0;
+        for (uint8_t i = 1; i < cd::kNumModes; i++)
+            if (t.mode_energy[i] > t.mode_energy[dom]) dom = i;
+        const float f_dom = t.mode_hz[dom] > 0.f ? t.mode_hz[dom] : t.pitch_hz;
+        const float periods = (float)dms * 0.001f * f_dom;
         bowq_ = periods > 0.f ? (float)(t.slips - slips_seen_) / periods : 0.f;
         slips_seen_ = t.slips;
         slips_ms_   = now;

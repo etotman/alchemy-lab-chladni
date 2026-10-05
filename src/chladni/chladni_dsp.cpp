@@ -119,6 +119,16 @@ constexpr float kEps = CHLADNI_EPS;  /* stick regularisation width  */
 constexpr float kVs  = CHLADNI_VS;   /* Stribeck velocity           */
 constexpr float kBowFloor = 0.005f;  /* pressure scale at zero speed */
 
+/* Schelleng's scale is a string's. A bar or plate has no Helmholtz motion
+ * to fall into: the bow sustains one mode, and only while the stick-slip
+ * stays gentle - pressed at a string's 0.3-0.5 it flips between modes and
+ * roars (a lab bowing a bar at 0.45 measured 0.2-0.4 periodicity and 20 dB
+ * level swings). Swept over pitch 110-520 Hz, position 0.08-0.5, high loss
+ * 0.2-0.9 and bow speed: a bar bows clean at 0.015-0.03, a plate at
+ * 0.05-0.12, a string at 0.3-0.5. These factors put each window at the same
+ * place on the Pressure knob. */
+constexpr float kMaterialPressure[kNumMaterials] = { 1.f, 0.06f, 0.2f };
+
 inline void Friction(float dv, float rosin, float& mu, float& dmu)
 {
     const float x   = dv / kEps;
@@ -311,7 +321,8 @@ void Instrument::Rebuild()
      * end. Scaling by beta^-1.5 (calibrated at beta 0.13) pins the window's
      * geometric centre, so one pressure setting plays at any position. */
     torsion_y_  = CHLADNI_TORSION * 2.f * y_band;   /* rolling under the bow */
-    bow_fscale_ = 2.f * z_eff / (pos_ * (kMuS - kMuD)) * sqrtf(0.13f / pos_);
+    bow_fscale_ = 2.f * z_eff / (pos_ * (kMuS - kMuD)) * sqrtf(0.13f / pos_)
+                * kMaterialPressure[mat < kNumMaterials ? mat : 0];
 
     /* Bridge peak admittance, bounded from above: at each mode's frequency,
      * the sum of every mode's |velocity per force| there. Triangle

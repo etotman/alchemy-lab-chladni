@@ -50,7 +50,9 @@ string as it was a while ago.
 - **Bow:** Coulomb friction with a Stribeck drop from static to sliding,
   regularised through zero. Pressure is scaled by Schelleng's maximum bow
   force, so one setting stays playable at any bow position, speed or pitch.
-  Clean bowing holds from about a third to two thirds of the Pressure knob.
+  Clean bowing holds from about a third to two thirds of the Pressure knob,
+  for every material: a bar bows clean at about a twentieth of a string's
+  force and a plate at a fifth, and the knob is scaled for each.
 - **Clean attacks.** Left to itself, a friction-curve bow spends 100–300 ms
   slipping twice a period before Helmholtz motion forms, which is heard as
   a scratch at every note. So at each onset (the bow landing, or reversing)
@@ -154,8 +156,8 @@ other. With Couple at zero, or no cables, each Lab is a solo instrument.
 | **B2** | strike, at the Velocity knob; flashes white |
 | **B3** | the bow: hold it to bow while held, tap it to leave the bow down, tap again to lift |
 
-**B3's light is the bow's state:** green for a clean tone (Helmholtz
-motion, one slip per period), amber when it slips too often (too light, or
+**B3's light is the bow's state:** green for a clean tone (one slip per
+period of the mode that is ringing - Helmholtz motion on a string), amber when it slips too often (too light, or
 still finding the note), red when it is pressed too hard. A dim green means
 the bow is down but not speaking yet.
 
@@ -270,7 +272,7 @@ dfu-util -w -a 0 -s 0x90040000:leave -D chladni_0x42.bin -d ,0483:df11 &
 sleep 0.5
 python3 tools/hostlink_reboot.py reboot /dev/cu.usbmodemXXXXXXXX   # that Lab's port
 wait
-python3 tools/hostlink_reboot.py hello  /dev/cu.usbmodemXXXXXXXX   # expect: Chladni 0.1.1
+python3 tools/hostlink_reboot.py hello  /dev/cu.usbmodemXXXXXXXX   # expect: Chladni 0.1.2
 ```
 
 - Flash one Lab at a time: dfu-util takes whichever bootloader appears.

@@ -38,7 +38,7 @@ constexpr uint8_t kNumMaterials = 3;
 }
 
 static const DescriptorBuilder::ModuleInfo kInfo = {
-    "chladni", "Chladni", "0.1.1", "i2c", "host-probe", "v2"
+    "chladni", "Chladni", "0.1.2", "i2c", "host-probe", "v2"
 };
 
 /* ── Ranges ──────────────────────────────────────────────────────────── */
