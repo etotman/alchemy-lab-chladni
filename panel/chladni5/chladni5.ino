@@ -490,6 +490,7 @@ static void drawWaiting(uint8_t src) {
 static const float kAspect = 1.13f;              /* plate Ly / Lx */
 static uint8_t plate_m[NUM_MODES], plate_n[NUM_MODES];
 static float   plate_ratio[NUM_MODES];
+static int8_t  plate_idx[13][13];               /* (m, n) -> mode index, or -1 */
 static const char *kMaterialNames[NUM_MATERIALS] = { "String", "Bar", "Plate" };
 
 static void buildPlateTable(void) {
@@ -505,8 +506,10 @@ static void buildPlateTable(void) {
     while (j >= 0 && all[j].v > t.v) { all[j + 1] = all[j]; j--; }
     all[j + 1] = t;
   }
+  memset(plate_idx, -1, sizeof plate_idx);
   for (int i = 0; i < NUM_MODES; i++) {
     plate_m[i] = all[i].m; plate_n[i] = all[i].n; plate_ratio[i] = all[i].v / all[0].v;
+    plate_idx[all[i].m][all[i].n] = (int8_t)i;
   }
 }
 
@@ -734,34 +737,65 @@ static void clStrobe(uint8_t src) {
   tft->fillRect(pk - 1, Y_BODY + BODY_H - 8, 3, 8, C_PICK);
 }
 
-/* Plate: the Chladni figure. Sand gathers where the plate barely moves -
- * where the sum of every mode's motion (its RMS) is small. */
+/* Plate: the Chladni figure.
+ *
+ * A real Chladni figure is a plate driven at ONE frequency: sand piles on
+ * that mode's nodal lines. A struck or bowed plate rings many modes, and
+ * averaged over time their motions fill in each other's nodes - drawing
+ * "sand where the plate is still" from all of them (the first version)
+ * showed only the always-still edges. And the lowest mode, (1,1), which
+ * dominates every strike, has no nodal lines inside the plate at all.
+ *
+ * So this draws the figure of the strongest OVERTONE - by velocity, the
+ * fundamental left out - together with its mirror partner (n,m), added in
+ * proportion to how strongly each rings. A mode alone gives a grid of
+ * straight lines; the pair together gives the curved figures Chladni drew
+ * (diagonals, S-curves, rings), and the figure morphs as the balance
+ * between the two shifts. Sand fades out near the edges, which are always
+ * still on this simply supported plate. Prototyped against engine
+ * snapshots of strikes and bowing before it went on the panel. */
 static void clChladni(uint8_t src) {
   ClView &v = colv[src];
   const Cl &z = cl[src];
   const int ox = v.x + (kColW - GRID * CELL) / 2, oy = Y_BODY + (BODY_H - GRID * CELL) / 2;
-  float a2[NUM_MODES];
-  for (int i = 0; i < NUM_MODES; i++) a2[i] = ampTab[src][i] * ampTab[src][i];
-  static float r2[GRID][GRID];
+  int k = -1;
+  float vk = 0.f;
+  for (int i = 1; i < NUM_MODES; i++) {
+    const float vel = ampTab[src][i] * ratioTab[src][i];
+    if (vel > vk) { vk = vel; k = i; }
+  }
+  int p = -1;
+  float vp = 0.f;
+  if (k >= 0) {
+    p = plate_idx[plate_n[k]][plate_m[k]];
+    if (p == k) p = -1;
+    if (p >= 0) vp = ampTab[src][p] * ratioTab[src][p];
+  }
+  static float w[GRID][GRID];
   float mx = 0.f;
   for (int j = 0; j < GRID; j++)
     for (int i = 0; i < GRID; i++) {
-      float s = 0.f;
-      for (int n = 0; n < NUM_MODES; n++) {
-        const float a = sinTab[plate_m[n]][i], b = sinTab[plate_n[n]][j];
-        s += a2[n] * a * a * b * b;
-      }
-      r2[j][i] = s;
-      if (s > mx) mx = s;
+      float a = 0.f;
+      if (k >= 0) a = vk * sinTab[plate_m[k]][i] * sinTab[plate_n[k]][j];
+      if (p >= 0) a += vp * sinTab[plate_m[p]][i] * sinTab[plate_n[p]][j];
+      a = fabsf(a);
+      w[j][i] = a;
+      if (a > mx) mx = a;
     }
-  const float vis = visLevel(z);
+  float vs = (z.level - 60.f) / 60.f;                 /* sand shows once it rings at all */
+  vs = vs < 0.f ? 0.f : vs > 1.f ? 1.f : vs;
   static const uint8_t kPlate[3] = {22, 26, 34}, kSand[3] = {255, 226, 160};
   for (int j = 0; j < GRID; j++)
     for (int i = 0; i < GRID; i++) {
-      const float r = mx > 0.f ? sqrtf(r2[j][i] / mx) : 1.f;
-      float s = 1.f - r; s *= s; s *= s; s *= s;           /* (1 - r)^8: sand only near the nodes */
+      float s = 0.f;
+      if (mx > 0.f) {
+        s = 1.f - (w[j][i] / mx) / 0.2f;              /* sand within 20 % of a node */
+        s = s < 0.f ? 0.f : s * sqrtf(s);
+        const int e = min(min(i, GRID - 1 - i), min(j, GRID - 1 - j));
+        if (e < 3) s *= (e + 0.5f) / 3.f;             /* edges are always still: fade them */
+      }
       tft->fillRect(ox + i * CELL, oy + j * CELL, CELL, CELL,
-                    lerpRGB(kPlate, kSand, (uint8_t)(s * vis * 255.f), 255));
+                    lerpRGB(kPlate, kSand, (uint8_t)(s * vs * 255.f), 255));
     }
   tft->drawRect(ox - 1, oy - 1, GRID * CELL + 2, GRID * CELL + 2, C_RULE);
   float x, y;

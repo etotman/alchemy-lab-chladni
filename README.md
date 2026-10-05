@@ -211,8 +211,12 @@ on the inside is a column showing:
 - **the body.** A string or bar is drawn moving in slow motion, about one
   turn of the fundamental a second, inside a faint band of its whole swing.
   A clean bowed string shows the single travelling corner of Helmholtz
-  motion. A plate shows its **Chladni figure**: sand gathering wherever the
-  plate is still. Pink marks the strike point, cyan the pickup;
+  motion. A plate shows a **Chladni figure**: sand on the nodal lines of its
+  strongest overtone together with that mode's mirror partner, so it draws
+  the curved figures Chladni drew, and morphs as the balance between them
+  shifts. (A struck plate rings too many modes at once for one still
+  pattern, and its fundamental has no nodal lines inside the plate.) Pink
+  marks the strike point, cyan the pickup;
 - **MODES:** 24 bars, each at its mode's real frequency on a log axis, its
   energy in dB;
 - **CONTACT:** the contact point's phase portrait, velocity against
