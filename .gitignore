@@ -1,0 +1,7 @@
+build/
+.DS_Store
+*.bin
+tools/chladni_render/out/
+tools/chladni_render/render
+panel/*/wifi_secrets.h
+panel/*/build/
